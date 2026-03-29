@@ -43,7 +43,7 @@ interface SyncResult {
 
 // ========== HELPERS ==========
 
-const basePath = '/bling-suri-next';
+const basePath = '';
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleString('pt-BR', {
