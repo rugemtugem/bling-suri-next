@@ -26,6 +26,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
+ENV DATABASE_URL="file:./data/app.db"
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
@@ -33,7 +34,7 @@ RUN adduser --system --uid 1001 nextjs
 # Copy public assets
 COPY --from=builder /app/public ./public
 
-# Copy standalone build (includes node_modules and generated prisma)
+# Copy standalone build
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
@@ -46,6 +47,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules/dotenv ./node_module
 
 # Copy favicon
 COPY --from=builder --chown=nextjs:nodejs /app/src/app/favicon.png ./public/favicon.png
+
+# Create writable data directory for SQLite
+RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data
 
 # Copy startup script
 COPY --from=builder --chown=nextjs:nodejs /app/start.sh ./start.sh
