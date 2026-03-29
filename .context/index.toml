@@ -1,0 +1,62 @@
+# LAYER 0 — Loaded on EVERY interaction
+[always]
+files = [
+  "/project.toml",
+  "/rules.md",
+  "/soul.md",
+]
+
+[on_implementation]
+trigger = "implement, code, build, develop, sync, webhook, api route"
+read = [
+  "/memory/progress.md",
+  "/memory/issues.md",
+  "/specs/",
+  "/skills/",
+]
+write = [
+  "/memory/progress.md",
+  "/specs/[feature].md",
+]
+
+[on_bug]
+trigger = "bug, error, fix, not working, broken"
+read = [
+  "/memory/issues.md",
+  "/memory/progress.md",
+  "/specs/",
+]
+write = [
+  "/memory/issues.md",
+  "/memory/progress.md",
+]
+
+[on_architecture]
+trigger = "architecture, database, api design, restructure"
+read = [
+  "/memory/decisions.md",
+  "/memory/progress.md",
+  "/specs/",
+]
+write = [
+  "/memory/decisions.md",
+  "/specs/[feature].md",
+]
+
+[on_infra]
+trigger = "deploy, docker, VPS, nginx, cron, production"
+read = [
+  "/memory/decisions.md",
+  "/skills/",
+]
+write = [
+  "/memory/decisions.md",
+]
+
+[on_design_system]
+trigger = "design, UI, dashboard, component, animation, dark mode"
+read = [
+  "/project.toml",
+  "/specs/",
+]
+write = []

@@ -1,0 +1,34 @@
+[project]
+name = "Bling × Suri Next"
+version = "0.1"
+description = "Integração Bling ERP ↔ Suri Atendimento com dashboard real-time"
+type = "web-app"
+language = "pt-BR"
+
+[project.team]
+author = "rugemtugem"
+company = "Baby Suri"
+
+[project.urls]
+production = "https://rugemtugem.dev/bling-suri-next"
+staging = ""
+local = "http://localhost:3000/bling-suri-next"
+repository = ""
+docs = ""
+
+[stack]
+languages = ["TypeScript"]
+frameworks = ["Next.js 16", "React 19", "Prisma 7"]
+database = "SQLite"
+package_manager = "npm"
+hosting = "VPS (rugemtugem.dev)"
+
+[environments]
+required = ["DATABASE_URL", "BLING_CLIENT_ID", "BLING_CLIENT_SECRET", "SURI_API_URL", "SURI_API_TOKEN", "JWT_SECRET"]
+optional = ["ADMIN_EMAIL", "BLING_REDIRECT_URI", "SURI_CATEGORY_ID"]
+
+[design]
+primary_color = "#6366f1"
+secondary_color = "#8b5cf6"
+font_family = "Inter"
+spacing_unit = "8px"

@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Token {
+  id           Int      @id @default(autoincrement())
+  accessToken  String
+  refreshToken String
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Product {
+  id        Int      @id @default(autoincrement())
+  sku       String   @unique
+  blingId   String?
+  suriId    String?
+  name      String
+  price     Float    @default(0)
+  stock     Int      @default(0)
+  imageUrl  String?
+  isActive  Boolean  @default(true)
+  syncedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id             Int         @id @default(autoincrement())
+  suriOrderId    String      @unique
+  blingOrderId   String?
+  customerName   String
+  customerDoc    String?
+  customerEmail  String?
+  customerPhone  String?
+  totalAmount    Float       @default(0)
+  shippingCost   Float       @default(0)
+  status         String      @default("pending")
+  blingStatus    String?
+  itemsJson      String      @default("[]")
+  addressJson    String?
+  retryCount     Int         @default(0)
+  lastError      String?
+  processedAt    DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  statusLogs     StatusLog[]
+}
+
+model StatusLog {
+  id         Int      @id @default(autoincrement())
+  orderId    Int
+  order      Order    @relation(fields: [orderId], references: [id])
+  fromStatus String?
+  toStatus   String
+  source     String   // "bling" | "suri" | "manual"
+  details    String?
+  createdAt  DateTime @default(now())
+}
+
+model SyncLog {
+  id        Int      @id @default(autoincrement())
+  type      String   // "product" | "status" | "order" | "token"
+  action    String   // "create" | "update" | "delete" | "sync" | "refresh"
+  result    String   // "success" | "error" | "skipped"
+  message   String?
+  details   String?
+  createdAt DateTime @default(now())
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
