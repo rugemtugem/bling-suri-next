@@ -8,8 +8,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "npx prisma generate && next build",
-    "start": "next start",
-    "postinstall": "npx prisma generate"
+    "start": "next start"
   },
   "dependencies": {
     "@libsql/client": "^0.17.2",
