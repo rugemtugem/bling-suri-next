@@ -13,17 +13,18 @@ Dashboard profissional para sincronização entre **Bling ERP** e **Suri Atendim
 
 Integra os três fluxos de negócio entre Bling e Suri com rastreabilidade total:
 
-| Fluxo | Direção | Descrição |
-|-------|---------|-----------|
-| **Produtos** | Bling → Suri | Sincroniza catálogo de produtos com mapeamento de campos |
-| **Pedidos** | Suri → Bling | Recebe vendas via webhook e cria pedidos automaticamente |
-| **Status** | Bling ↔ Suri | Propaga mudanças de status (pago, enviado, entregue, cancelado) |
+| Fluxo        | Direção      | Descrição                                                       |
+| ------------ | ------------ | --------------------------------------------------------------- |
+| **Produtos** | Bling → Suri | Sincroniza catálogo de produtos com mapeamento de campos        |
+| **Pedidos**  | Suri → Bling | Recebe vendas via webhook e cria pedidos automaticamente        |
+| **Status**   | Bling ↔ Suri | Propaga mudanças de status (pago, enviado, entregue, cancelado) |
 
 ---
 
 ## ✨ Funcionalidades
 
 ### Dashboard
+
 - 📊 **Métricas em tempo real** — pedidos do dia, produtos sincronizados, taxa de sucesso
 - 🛒 **Tabela de pedidos** — busca, filtros por status, paginação
 - 🔄 **Painel de sync manual** — botões para disparar sincronização sob demanda
@@ -31,6 +32,7 @@ Integra os três fluxos de negócio entre Bling e Suri com rastreabilidade total
 - 🔑 **Status do token** — indicador visual com contagem de horas restantes
 
 ### Backend
+
 - 🔐 **Autenticação JWT** — login com bcrypt, cookie httpOnly, cadastro no primeiro acesso
 - 🔄 **OAuth2 Bling** — handshake automático com renovação de token
 - 📦 **Sync de produtos** — paginação, upsert, tratamento de erros individuais
@@ -40,6 +42,7 @@ Integra os três fluxos de negócio entre Bling e Suri com rastreabilidade total
 - 📝 **Logs estruturados** — toda operação registrada no banco (SyncLog + StatusLog)
 
 ### Infraestrutura
+
 - 🐳 **Docker ready** — Dockerfile multi-stage otimizado para Dokploy
 - 🗄️ **Prisma + SQLite** — zero config, fácil migrar para PostgreSQL
 - 📁 **DotContext** — contexto estruturado para assistentes IA
@@ -142,6 +145,7 @@ npm run dev
 Acesse: `http://localhost:3000/bling-suri-next`
 
 ### Primeiro Acesso
+
 - **Email:** `contato@rugemtugem.dev`
 - **Senha:** cadastrada no primeiro login
 
@@ -153,18 +157,18 @@ Acesse: `http://localhost:3000/bling-suri-next`
 2. No Dokploy → Nova Application → Dockerfile
 3. Configurar variáveis de ambiente:
 
-| Variável | Descrição |
-|----------|-----------|
-| `DATABASE_URL` | `file:./data/prod.db` |
-| `BLING_CLIENT_ID` | Client ID OAuth2 Bling |
-| `BLING_CLIENT_SECRET` | Client Secret Bling |
-| `BLING_API_URL` | `https://www.bling.com.br/Api/v3` |
-| `BLING_REDIRECT_URI` | URL do callback OAuth2 |
-| `SURI_API_URL` | URL da API Suri |
-| `SURI_API_TOKEN` | Token Bearer da Suri |
-| `SURI_CATEGORY_ID` | ID da categoria de produtos |
-| `JWT_SECRET` | Chave secreta para tokens JWT |
-| `ADMIN_EMAIL` | Email do administrador |
+| Variável              | Descrição                         |
+| --------------------- | --------------------------------- |
+| `DATABASE_URL`        | `file:./data/prod.db`             |
+| `BLING_CLIENT_ID`     | Client ID OAuth2 Bling            |
+| `BLING_CLIENT_SECRET` | Client Secret Bling               |
+| `BLING_API_URL`       | `https://www.bling.com.br/Api/v3` |
+| `BLING_REDIRECT_URI`  | URL do callback OAuth2            |
+| `SURI_API_URL`        | URL da API Suri                   |
+| `SURI_API_TOKEN`      | Token Bearer da Suri              |
+| `SURI_CATEGORY_ID`    | ID da categoria de produtos       |
+| `JWT_SECRET`          | Chave secreta para tokens JWT     |
+| `ADMIN_EMAIL`         | Email do administrador            |
 
 4. Configurar domínio → `rugemtugem.dev/bling-suri-next`
 
@@ -184,16 +188,16 @@ Acesse: `http://localhost:3000/bling-suri-next`
 
 ## 📡 Endpoints da API
 
-| Rota | Método | Origem | Função |
-|------|--------|--------|--------|
-| `/api/webhooks/suri` | POST | Suri | Recebe eventos de pedidos |
-| `/api/sync/products` | POST | Manual/Cron | Sincroniza catálogo |
-| `/api/sync/status` | POST | Manual/Cron | Sincroniza status |
-| `/api/auth/bling` | GET | Browser | OAuth2 Bling |
-| `/api/auth/login` | POST | Dashboard | Login/cadastro |
-| `/api/orders` | GET | Dashboard | Lista pedidos |
-| `/api/dashboard` | GET | Dashboard | Métricas |
-| `/api/cron/refresh` | GET | Cron | Renova token |
+| Rota                 | Método | Origem      | Função                    |
+| -------------------- | ------ | ----------- | ------------------------- |
+| `/api/webhooks/suri` | POST   | Suri        | Recebe eventos de pedidos |
+| `/api/sync/products` | POST   | Manual/Cron | Sincroniza catálogo       |
+| `/api/sync/status`   | POST   | Manual/Cron | Sincroniza status         |
+| `/api/auth/bling`    | GET    | Browser     | OAuth2 Bling              |
+| `/api/auth/login`    | POST   | Dashboard   | Login/cadastro            |
+| `/api/orders`        | GET    | Dashboard   | Lista pedidos             |
+| `/api/dashboard`     | GET    | Dashboard   | Métricas                  |
+| `/api/cron/refresh`  | GET    | Cron        | Renova token              |
 
 ---
 
@@ -208,4 +212,4 @@ Acesse: `http://localhost:3000/bling-suri-next`
 
 ## 📝 Licença
 
-Projeto privado — Baby Suri / rugemtugem.dev
+Projeto privado — Bling + Suri / rugemtugem.dev
