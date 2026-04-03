@@ -16,6 +16,9 @@ COPY . .
 # Generate Prisma client
 RUN npx prisma generate
 
+# Create empty database with schema
+RUN DATABASE_URL=file:./seed.db npx prisma db push --skip-generate
+
 # Build Next.js
 RUN npm run build
 
@@ -26,7 +29,6 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
-ENV DATABASE_URL="file:./data/app.db"
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
@@ -38,17 +40,17 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy Prisma files for db push at startup
+# Copy Prisma config for runtime
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/prisma.config.ts ./prisma.config.ts
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/dotenv ./node_modules/dotenv
+
+# Copy empty database template
+COPY --from=builder --chown=nextjs:nodejs /app/seed.db ./seed.db
 
 # Copy favicon
 COPY --from=builder --chown=nextjs:nodejs /app/src/app/favicon.png ./public/favicon.png
 
-# Create writable data directory for SQLite
+# Create writable data directory
 RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data
 
 # Copy startup script
