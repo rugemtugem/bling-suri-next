@@ -63,6 +63,7 @@ function mapBlingToSuri(product: BlingProduct): SuriProduct {
 export async function POST() {
   const startTime = Date.now();
   let created = 0, updated = 0, errors = 0, skipped = 0;
+  const errorSamples: string[] = [];
 
   try {
     const products = await bling.fetchAllProducts();
@@ -85,20 +86,26 @@ export async function POST() {
           result = await suri.updateProduct(existing.suriId, suriProduct);
           if (result.ok) updated++;
           else if (result.status === 404) {
-            // Product deleted from Suri, recreate
             result = await suri.createProduct(suriProduct);
             if (result.ok) created++;
-            else errors++;
+            else {
+              errors++;
+              if (errorSamples.length < 5) errorSamples.push(`[${sku}] create after 404: ${result.status} ${JSON.stringify(result.data)}`);
+            }
           } else {
             errors++;
+            if (errorSamples.length < 5) errorSamples.push(`[${sku}] update: ${result.status} ${JSON.stringify(result.data)}`);
           }
         } else {
           result = await suri.createProduct(suriProduct);
           if (result.ok) created++;
-          else errors++;
+          else {
+            errors++;
+            if (errorSamples.length < 5) errorSamples.push(`[${sku}] create: ${result.status} ${JSON.stringify(result.data)}`);
+          }
         }
 
-        // Update DB
+        // Update DB (even on error, save the Bling product info)
         const suriId = result.data?.id || result.data?.providerId || existing?.suriId;
         const stock = blingProduct.estoques?.reduce((s, e) => s + (e.saldoVirtualTotal || 0), 0) || 0;
 
@@ -126,8 +133,9 @@ export async function POST() {
 
         // Rate limit between Suri calls
         await new Promise((r) => setTimeout(r, 500));
-      } catch {
+      } catch (e) {
         errors++;
+        if (errorSamples.length < 5) errorSamples.push(`[exception] ${e instanceof Error ? e.message : String(e)}`);
       }
     }
 
@@ -145,7 +153,7 @@ export async function POST() {
 
     return NextResponse.json({
       success: true,
-      data: { total: products.length, created, updated, errors, skipped, duration: `${duration}s` },
+      data: { total: products.length, created, updated, errors, skipped, duration: `${duration}s`, errorSamples },
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Erro interno';
