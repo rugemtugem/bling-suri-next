@@ -17,7 +17,7 @@ COPY . .
 RUN npx prisma generate
 
 # Create empty database with schema
-RUN DATABASE_URL=file:./seed.db npx prisma db push --skip-generate
+RUN npx prisma db push --url file:./seed.db
 
 # Build Next.js
 RUN npm run build
