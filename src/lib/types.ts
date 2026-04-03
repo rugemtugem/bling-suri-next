@@ -3,6 +3,7 @@
 export interface BlingProduct {
   id: number;
   codigo: string;
+  nome?: string;
   descricao: string;
   descricaoComplementar?: string;
   preco: number;

@@ -31,8 +31,8 @@ function mapBlingToSuri(product: BlingProduct): SuriProduct {
     sellerId: 'all',
     sellerName: null,
     isActive: true,
-    name: product.descricao || '',
-    description: product.descricaoComplementar || product.descricao || '',
+    name: product.descricao || product.nome || sku,
+    description: product.descricaoComplementar || product.descricao || product.nome || '',
     url: null,
     price,
     promotionalPrice: 0,
@@ -69,8 +69,8 @@ export async function POST() {
 
     for (const blingProduct of products) {
       const sku = blingProduct.codigo || String(blingProduct.id);
-      const name = blingProduct.descricao || '';
-      if (!sku || !name) { skipped++; continue; }
+      const name = blingProduct.descricao || blingProduct.nome || sku;
+      if (!sku) { skipped++; continue; }
 
       try {
         const suriProduct = mapBlingToSuri(blingProduct);
