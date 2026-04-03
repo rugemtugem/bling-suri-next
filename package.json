@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "npx prisma generate && next build",
-    "start": "npx prisma db push --skip-generate && node .next/standalone/server.js"
+    "start": "DATABASE_URL=file:./data/app.db npx prisma db push --skip-generate && DATABASE_URL=file:./data/app.db node .next/standalone/server.js"
   },
   "dependencies": {
     "@libsql/client": "^0.17.2",
