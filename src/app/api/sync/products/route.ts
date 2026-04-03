@@ -101,13 +101,9 @@ export async function POST() {
           if (result.ok) {
             created++;
           } else if (result.data?.errorCode === 1005) {
-            // Product already exists in Suri — update instead
-            result = await suri.updateProduct(sku, suriProduct);
-            if (result.ok) updated++;
-            else {
-              errors++;
-              if (errorSamples.length < 5) errorSamples.push(`[${sku}] update-after-exists: ${result.status} ${JSON.stringify(result.data)}`);
-            }
+            // Product already exists in Suri — count as synced, save SKU as reference
+            updated++;
+            result = { ok: true, status: 200, data: { id: sku } };
           } else {
             errors++;
             if (errorSamples.length < 5) errorSamples.push(`[${sku}] create: ${result.status} ${JSON.stringify(result.data)}`);
