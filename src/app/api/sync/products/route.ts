@@ -98,8 +98,17 @@ export async function POST() {
           }
         } else {
           result = await suri.createProduct(suriProduct);
-          if (result.ok) created++;
-          else {
+          if (result.ok) {
+            created++;
+          } else if (result.data?.errorCode === 1005) {
+            // Product already exists in Suri — update instead
+            result = await suri.updateProduct(sku, suriProduct);
+            if (result.ok) updated++;
+            else {
+              errors++;
+              if (errorSamples.length < 5) errorSamples.push(`[${sku}] update-after-exists: ${result.status} ${JSON.stringify(result.data)}`);
+            }
+          } else {
             errors++;
             if (errorSamples.length < 5) errorSamples.push(`[${sku}] create: ${result.status} ${JSON.stringify(result.data)}`);
           }
