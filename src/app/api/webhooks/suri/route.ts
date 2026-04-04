@@ -191,11 +191,32 @@ async function processStatusEvent(orderId: string, event: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const payload: SuriWebhookPayload = await request.json();
+    const rawBody = await request.text();
+
+    // Log every incoming webhook call
+    try {
+      await prisma.syncLog.create({
+        data: {
+          type: 'webhook',
+          action: 'incoming',
+          result: 'info',
+          message: rawBody.slice(0, 500),
+          details: request.headers.get('user-agent'),
+        },
+      });
+    } catch { /* don't fail on log error */ }
+
+    let payload: SuriWebhookPayload;
+    try {
+      payload = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json({ success: false, error: 'JSON inválido' }, { status: 400 });
+    }
+
     const { OrderId, HookEvent } = payload;
 
     if (!OrderId || !HookEvent) {
-      return NextResponse.json({ success: false, error: 'Payload inválido' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Payload inválido', received: payload }, { status: 400 });
     }
 
     // Status events (Paid/Canceled)
