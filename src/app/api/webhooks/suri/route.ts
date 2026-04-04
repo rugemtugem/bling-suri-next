@@ -211,32 +211,128 @@ export async function POST(request: NextRequest) {
       });
     } catch { /* don't fail on log error */ }
 
-    let payload: SuriWebhookPayload;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let payload: any;
     try {
       payload = JSON.parse(rawBody);
     } catch {
       return NextResponse.json({ success: false, error: 'JSON inválido' }, { status: 400 });
     }
 
-    const { OrderId, HookEvent } = payload;
+    // ========== FORMAT 1: Legacy Suri {OrderId, HookEvent} ==========
+    if (payload.OrderId && payload.HookEvent) {
+      const { OrderId, HookEvent } = payload;
 
-    if (!OrderId || !HookEvent) {
-      return NextResponse.json({ success: false, error: 'Payload inválido', received: payload }, { status: 400 });
+      if (HookEvent === 'OrdersPaid' || HookEvent === 'OrdersCanceled') {
+        const result = await processStatusEvent(OrderId, HookEvent);
+        return NextResponse.json({ success: result.success, data: result });
+      }
+
+      if (HookEvent === 'OrdersCreated') {
+        const result = await processOrderCreated(OrderId);
+        return NextResponse.json({ success: result.success, data: result });
+      }
+
+      return NextResponse.json({ success: true, message: `Evento '${HookEvent}' ignorado` });
     }
 
-    // Status events (Paid/Canceled)
-    if (HookEvent === 'OrdersPaid' || HookEvent === 'OrdersCanceled') {
-      const result = await processStatusEvent(OrderId, HookEvent);
-      return NextResponse.json({ success: result.success, data: result });
+    // ========== FORMAT 2: V1 {event, data: {id, numero, situacao, ...}} ==========
+    if (payload.event && payload.data) {
+      const event = payload.event as string;
+      const data = payload.data;
+      const orderId = String(data.numero || data.id);
+      const numeroLoja = data.numeroLoja ? String(data.numeroLoja) : null;
+
+      // Order created
+      if (event === 'order.created') {
+        const lookupId = numeroLoja || orderId;
+        const result = await processOrderCreated(lookupId);
+        return NextResponse.json({ success: result.success, data: result });
+      }
+
+      // Order updated (status change)
+      if (event === 'order.updated' && data.situacao) {
+        const situacaoId = data.situacao.id;
+        const blingOrderId = String(data.id);
+
+        // Find order in our DB by blingOrderId or suriOrderId
+        let order = await prisma.order.findFirst({
+          where: { blingOrderId },
+        });
+        if (!order && numeroLoja) {
+          order = await prisma.order.findUnique({ where: { suriOrderId: numeroLoja } });
+        }
+        if (!order) {
+          order = await prisma.order.findUnique({ where: { suriOrderId: orderId } });
+        }
+
+        if (order) {
+          // Map Bling situação to Suri action
+          const { BLING_STATUS_MAP } = await import('@/lib/types');
+          const statusConfig = BLING_STATUS_MAP[situacaoId];
+
+          if (statusConfig) {
+            let actionSuccess = true;
+
+            switch (statusConfig.action) {
+              case 'paid':
+                actionSuccess = (await suri.markOrderPaid(order.suriOrderId)).success;
+                break;
+              case 'cancel':
+                actionSuccess = (await suri.cancelOrder(order.suriOrderId)).success;
+                break;
+              case 'logistic':
+                if (statusConfig.logisticStatus !== undefined) {
+                  actionSuccess = (await suri.updateLogistic(order.suriOrderId, statusConfig.logisticStatus)).success;
+                }
+                break;
+            }
+
+            const newStatus = statusConfig.action === 'paid' ? 'paid'
+              : statusConfig.action === 'cancel' ? 'canceled'
+              : statusConfig.logisticStatus === 4 ? 'delivered'
+              : statusConfig.logisticStatus === 3 ? 'shipped'
+              : order.status;
+
+            await prisma.order.update({
+              where: { id: order.id },
+              data: { status: newStatus, blingStatus: statusConfig.label },
+            });
+
+            await prisma.statusLog.create({
+              data: {
+                orderId: order.id,
+                fromStatus: order.status,
+                toStatus: newStatus,
+                source: 'webhook-v1',
+                details: `Bling situação: ${situacaoId} (${statusConfig.label})`,
+              },
+            });
+
+            return NextResponse.json({
+              success: true,
+              data: { blingOrderId, status: statusConfig.label, action: statusConfig.action, actionSuccess },
+            });
+          }
+        }
+
+        // Order not found in DB, log it
+        await prisma.syncLog.create({
+          data: {
+            type: 'webhook',
+            action: 'order-not-found',
+            result: 'warning',
+            message: `Bling #${blingOrderId}, situação: ${situacaoId}`,
+          },
+        });
+
+        return NextResponse.json({ success: true, message: 'Pedido não mapeado, evento registrado' });
+      }
+
+      return NextResponse.json({ success: true, message: `Evento '${event}' registrado` });
     }
 
-    // Order creation
-    if (HookEvent === 'OrdersCreated') {
-      const result = await processOrderCreated(OrderId);
-      return NextResponse.json({ success: result.success, data: result });
-    }
-
-    return NextResponse.json({ success: true, message: `Evento '${HookEvent}' ignorado` });
+    return NextResponse.json({ success: false, error: 'Formato não reconhecido' }, { status: 400 });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Erro interno';
     return NextResponse.json({ success: false, error: message }, { status: 500 });
