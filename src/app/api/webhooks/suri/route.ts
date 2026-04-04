@@ -116,7 +116,12 @@ async function processOrderCreated(orderId: string) {
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result = await bling.createOrder(blingOrder as any);
+  let result = await bling.createOrder(blingOrder as any);
+
+  // If order already exists in Bling, treat as success
+  if (!result.success && result.error?.includes('Já foi lançado um pedido')) {
+    result = { success: true, orderId: suriOrderId, numero: suriOrderId };
+  }
 
   // Save to database
   await prisma.order.upsert({
