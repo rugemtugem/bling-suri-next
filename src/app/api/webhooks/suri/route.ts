@@ -169,8 +169,8 @@ async function processStatusEvent(orderId: string, event: string) {
     return { success: false, error: 'Pedido não encontrado no mapeamento' };
   }
 
-  const situacaoId = event === 'OrdersPaid' ? 9 : 12;
-  const statusLabel = event === 'OrdersPaid' ? 'Atendido' : 'Cancelado';
+  const situacaoId = event === 'OrdersPaid' ? 15 : 12;
+  const statusLabel = event === 'OrdersPaid' ? 'Em andamento' : 'Cancelado';
   const orderStatus = event === 'OrdersPaid' ? 'paid' : 'canceled';
 
   const success = await bling.updateOrderStatus(order.blingOrderId, situacaoId);
